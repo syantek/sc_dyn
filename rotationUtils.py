@@ -160,9 +160,40 @@ def addScalarFirstRightQuaternions(q2,q1):
 #print(addScalarFirstRightQuaternions([0.359211,0.898027,0.179605,0.179605],[0.774597,0.258199,0.516398,0.258199]))
 #print(addScalarFirstRightQuaternions([0.359211,0.898027,0.179605,0.179605],[0.377964,0.755929,0.377964,0.377964]))
 
+def beta(q):
+    '''quaternion "beta" function that calculates the 4x4 matrix used along with angular rate to calculate time derivative
+    of the quaternion'''
+    return 0.5*np.array([[q[0],-q[1],-q[2],-q[3]],[q[1],q[0],-q[3],q[2]],[q[2],q[3],q[0],-q[1]],[q[3],-q[2],q[1],q[0]]])
+
 def getQDot(q, w):
     '''Take in a scalar first right quaternion (list-like) q, and list-like anguar rate in the resulting frame w.
     Output the time derivative of the quaternion.'''
-    leftSide = np.array([[q2[0],-q2[1],-q2[2],-q2[3]],[q2[1],q2[0],-q2[3],q2[2]],[q2[2],q2[3],q2[0],-q2[1]],[q2[3],-q2[2],q2[1],q2[0]]])
+    leftSide = beta(q)
     rightSide = np.array([[0],[w[0]],[w[1]],[w[2]]])
     return np.matmul(leftSide,rightSide)
+
+def xdot_3_8_1(x,t):
+    '''differential equation describing time evolution of quaternion for
+    week 3 concept check 8 problem 1'''
+    # Angular velocity
+    w = np.radians(20) * np.array([[0.],[np.sin(0.1*t)],[0.01],[np.cos(0.1*t)]])
+    # terms that are used a lot
+    mat_term = beta([x[0,0],x[1,0],x[2,0],x[3,0]])
+    xdot = np.matmul(mat_term,w)
+    return xdot
+
+def do_3_8_1(dt,f):
+    '''Do concept check 3.8.1'''
+    # Initial conditions
+    t0 = 0
+    q0 = np.array([[0.408248],[0.],[0.408248],[0.816497]])
+    # final conditions
+    tf = 42
+    # Do integration
+    xf = integrateNewton(q0, f, t0, tf, dt)
+    print(xf)
+    # Find norm
+    print(np.sqrt(xf[1,0]**2+xf[2,0]**2+xf[3,0]**2))
+    return
+
+do_3_8_1(0.01,xdot_3_8_1)
