@@ -172,6 +172,12 @@ def getQDot(q, w):
     rightSide = np.array([[0],[w[0]],[w[1]],[w[2]]])
     return np.matmul(leftSide,rightSide)
 
+def CRP2Quat(crp):
+    '''Calculate scalar first right quaternion from the input CRP. Formats are nx1 numpy arrays'''
+    qTq = np.matmul(crp.transpose(),crp)[0,0]
+    quat = 1/np.sqrt(1+qTq)*np.concatenate([np.array([[1]]),crp])
+    return quat
+
 def xdot_3_8_1(x,t):
     '''differential equation describing time evolution of quaternion for
     week 3 concept check 8 problem 1'''
