@@ -196,4 +196,4 @@ def do_3_8_1(dt,f):
     print(np.sqrt(xf[1,0]**2+xf[2,0]**2+xf[3,0]**2))
     return
 
-do_3_8_1(0.01,xdot_3_8_1)
+#do_3_8_1(0.01,xdot_3_8_1)
