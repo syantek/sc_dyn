@@ -1,6 +1,8 @@
+import enum
 from re import X
 import numpy as np
-from rotationUtils import DCM2ScalarFirstRightQ, scalarFirstRightQ2DCM
+from rotationUtils import DCM2ScalarFirstRightQ, scalarFirstRightQ2DCM, CRP2Quat
+from crp import crp2dcm, skew
 
 def TRIAD(v1b,v1n,v2b,v2n):
     '''TRIAD algorithm.
@@ -112,11 +114,40 @@ def QUEST(w,n,b):
     # calculate CRP associated with this eigenvalue/eigenvector pair
     crp = np.matmul(np.linalg.inv((lambdaf+sigma[0,0])*np.eye(3)-S),Z)
     # Calculate quaternion from CRP
-    qTq = np.matmul(crp.transpose(),crp)[0,0]
-    quat = 1/np.sqrt(1+qTq)*np.concatenate([np.array([[1]]),crp])
+    quat = CRP2Quat(crp)
     # Calcualte DCM
     C = scalarFirstRightQ2DCM(quat.transpose()[0]) # Need to change this to use 4x1 array
     print(C)
+
+def OLAE(w,n,b):
+    S = None
+    d = None
+    W = np.eye(3*len(w))
+    for i, weight in enumerate(w):
+        # Set section of the W matrix for this measurement
+        W[3*i,3*i] = weight
+        W[3*i+1,3*i+1] = weight
+        W[3*i+1,3*i+1] = weight
+        # Set elements of S and d vectors
+        if i == 0:
+            S = skew(b[i]+n[i])
+            d = b[i]-n[i]
+        else:
+            S = np.concatenate([S,skew(b[i]+n[i])])
+            d = np.concatenate([d,b[i]-n[i]])
+    # Compute CRP solution
+    ST = S.transpose()
+    STW = np.matmul(ST,W)
+    STWS = np.matmul(STW,S)
+    mult_term = np.matmul(np.linalg.inv(STWS),STW)
+    print(mult_term)
+    print(d)
+    crp = np.matmul(mult_term,d)
+    # Get DCM
+    print(crp)
+    C = crp2dcm(crp)
+    return C
+
 
 # Week 4 concept check 2
 # 1
@@ -158,4 +189,16 @@ def do_4_5_6():
     w = [10, 1]
     q = QUEST(w,b,n)
 
-do_4_5_6()
+#do_4_5_6()
+
+def do_4_6_2():
+    n = []
+    n.append(np.array([[-0.1517,-0.9669,0.2050]]).transpose())
+    n.append(np.array([[-0.8393,0.4494,-0.3044]]).transpose())
+    b = []
+    b.append(np.array([[0.8273,0.5541,-0.0920]]).transpose())
+    b.append(np.array([[-0.8285,0.5522,-0.0955]]).transpose())
+    w = [10, 1]
+    print(OLAE(w,n,b))
+
+#do_4_6_2()
